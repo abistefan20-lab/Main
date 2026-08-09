@@ -1,0 +1,40 @@
+name: Generează livrabilele Staer
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  genereaza:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descarcă sursele
+        uses: actions/checkout@v4
+
+      - name: Configurează Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalează dependențele
+        run: python -m pip install -r requirements.txt
+
+      - name: Verifică testele locale
+        run: python -m pytest -q
+
+      - name: Generează livrabilele exclusiv din fișierele text
+        run: python scripts/analiza_raze_staer.py
+
+      - name: Publică livrabilele
+        uses: actions/upload-artifact@v4
+        with:
+          name: livrabile-staer
+          path: |
+            output/raza_comerciala_staer.xlsx
+            output/harta_raze_staer.html
+            output/rezumat_raze_staer.pdf
+          if-no-files-found: error
+          retention-days: 30

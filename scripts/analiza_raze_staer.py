@@ -8,6 +8,7 @@ prezent, clienții aferenți sunt păstrați explicit ca ``Negeocodat / nerutat`
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -80,13 +81,30 @@ def _rename_cache_columns(frame: pd.DataFrame) -> pd.DataFrame:
 
 
 def load_source(path: Path) -> pd.DataFrame:
-    frame = pd.read_excel(path, sheet_name=SOURCE_SHEET, header=HEADER_ROW)
+    """Încarcă sursa text; suportul XLSX rămâne doar pentru compatibilitate locală."""
+    if path.suffix.casefold() == ".csv":
+        frame = pd.read_csv(path)
+    else:
+        frame = pd.read_excel(path, sheet_name=SOURCE_SHEET, header=HEADER_ROW)
     frame = frame[frame["Magazin standard"].isin(EXPECTED_TOTALS)].copy()
     frame.loc[frame["Magazin original"].eq("Alis Ecomob SRL"), "Magazin standard"] = "Staer 9"
     for column in ADDRESS_COLUMNS:
         frame[column] = frame[column].map(canonical_text)
     frame["Nr. clienți"] = pd.to_numeric(frame["Nr. clienți"], errors="coerce").fillna(0)
     return frame
+
+
+def verify_manifest(path: Path | None) -> None:
+    """Oprește analiza dacă un fișier text nu corespunde manifestului."""
+    if path is None:
+        return
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    root = path.parent
+    for entry in payload["fișiere_intrare"]:
+        input_path = root / entry["cale"]
+        digest = hashlib.sha256(input_path.read_bytes()).hexdigest()
+        if digest != entry["sha256"]:
+            raise ValueError(f"Checksum invalid pentru {input_path}: {digest}")
 
 
 def prepare(source: Path, geocode_cache: Path | None, route_cache: Path | None) -> tuple[pd.DataFrame, dict[str, Any]]:
@@ -244,11 +262,13 @@ def write_outputs(output: Path, data: pd.DataFrame, audit: dict[str, Any]) -> No
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=Path("analiza_bazine_clienti_staer_bucuresti.xlsx"))
+    parser.add_argument("--input", type=Path, default=Path("data/sursa_analiza_staer.csv"))
     parser.add_argument("--output-dir", type=Path, default=Path("output"))
     parser.add_argument("--geocode-cache", type=Path, default=Path("cache/geocoding_cache.jsonl"))
     parser.add_argument("--route-cache", type=Path, default=Path("cache/routes_cache.jsonl"))
+    parser.add_argument("--manifest", type=Path, default=Path("manifest_date_staer.json"))
     args = parser.parse_args()
+    verify_manifest(args.manifest)
     data, audit = prepare(args.input, args.geocode_cache, args.route_cache)
     write_outputs(args.output_dir, data, audit)
     print(json.dumps(audit, ensure_ascii=False, indent=2))

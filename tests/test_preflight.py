@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pandas as pd
 
 from scripts.analiza_raze_staer import (
@@ -5,6 +7,7 @@ from scripts.analiza_raze_staer import (
     canonical_text,
     haversine,
     responsible_address_mask,
+    verify_manifest,
     weighted_quantile,
 )
 
@@ -34,3 +37,7 @@ def test_weighted_quantile_weights_clients_not_addresses():
     values = pd.Series([1.0, 10.0])
     weights = pd.Series([9, 1])
     assert weighted_quantile(values, weights, .8) == 1.0
+
+
+def test_text_inputs_match_manifest():
+    verify_manifest(Path("manifest_date_staer.json"))
