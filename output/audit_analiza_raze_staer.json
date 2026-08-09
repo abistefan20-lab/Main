@@ -1,0 +1,17 @@
+{
+  "totaluri_sursă": {
+    "Staer 23": 11470,
+    "Staer 7": 6617,
+    "Staer 9": 11117,
+    "Total": 29204
+  },
+  "reconciliat": true,
+  "apeluri_geocoding_efectuate_total": 10613,
+  "apeluri_geocoding_efectuate_în_etapa_de_analiză": 0,
+  "rânduri_cache_geocodare_citite": 7889,
+  "geocodări_reușite_unice": 7889,
+  "rânduri_cache_rutare_citite": 10482,
+  "elemente_route_matrix_rămase": 0,
+  "în_limita_25000": true,
+  "notă": "Etapa de analiză nu efectuează apeluri API; folosește cache-urile create separat și fără cheie API."
+}
