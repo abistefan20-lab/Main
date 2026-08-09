@@ -1,0 +1,16 @@
+{
+  "totaluri_sursă": {
+    "Staer 23": 11470,
+    "Staer 7": 6617,
+    "Staer 9": 11117,
+    "Total": 29204
+  },
+  "reconciliat": true,
+  "apeluri_geocoding_efectuate": 0,
+  "rânduri_cache_geocodare_citite": 0,
+  "geocodări_reușite_unice": 0,
+  "rânduri_cache_rutare_citite": 0,
+  "elemente_route_matrix_rămase": 0,
+  "în_l limita_25000": true,
+  "notă": "Nu s-au efectuat apeluri API; analiza folosește exclusiv cache-urile furnizate."
+}
