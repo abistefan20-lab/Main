@@ -12,5 +12,14 @@ LIVRABILE ANALIZA RAZE COMERCIALE STAER
 4. audit_analiza_raze_staer.json
    Fișier tehnic de audit; nu este necesar pentru citirea concluziilor.
 
+REZULTATE DISPONIBILE
+Au fost geocodate cu succes toate cele 7.889 de adrese unice eligibile. Acestea
+reprezintă 28.992 din totalul de 29.204 clienți (99,27%). Restul de 212 clienți
+sunt păstrați distinct ca „Negeocodat / nerutat”; rezultatele lor nu sunt
+extrapolate. Cache-urile nu conțin cheia API.
+
+Pentru acces simplu, deschideți mai întâi raportul PDF, apoi fișierul Excel.
+Harta HTML este interactivă și necesită conexiune la internet doar pentru
+afișarea fundalului cartografic; punctele și calculele analizei sunt deja în fișier.
 NOTĂ IMPORTANTĂ
 În checkout-ul disponibil nu există cache-urile cu cele 10.000 de rezultate de geocodare menționate anterior. Din acest motiv, aceste livrabile marchează clienții ca Negeocodat / nerutat și nu inventează coordonate sau distanțe. Nu a fost efectuat niciun apel API.

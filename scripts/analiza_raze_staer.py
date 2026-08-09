@@ -16,6 +16,8 @@ from typing import Any
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import folium
+from folium.plugins import HeatMap
 from matplotlib.backends.backend_pdf import PdfPages
 
 EXPECTED_TOTALS = {"Staer 7": 6_617, "Staer 9": 11_117, "Staer 23": 11_470}
@@ -125,14 +127,17 @@ def prepare(source: Path, geocode_cache: Path | None, route_cache: Path | None) 
     data.loc[~data["geocodat"], "rutier_km"] = np.nan
     data["interval rutier"] = pd.cut(data["rutier_km"], BINS, labels=LABELS, right=False).astype(object).fillna(UNGEO)
     required = int((data["geocodat"] & data["rutier_km"].isna()).sum())
+    run_summary_path = geocode_cache.with_name("geocoding_run_summary.json") if geocode_cache else None
+    run_summary = json.loads(run_summary_path.read_text(encoding="utf-8")) if run_summary_path and run_summary_path.is_file() else {}
     audit = {
         "totaluri_sursă": {**totals, "Total": 29_204}, "reconciliat": True,
-        "apeluri_geocoding_efectuate": 0, "rânduri_cache_geocodare_citite": geo_attempts,
+        "apeluri_geocoding_efectuate_total": run_summary.get("apeluri_geocoding", "necunoscut"),
+        "apeluri_geocoding_efectuate_în_etapa_de_analiză": 0, "rânduri_cache_geocodare_citite": geo_attempts,
         "geocodări_reușite_unice": int(geo.shape[0]) if not geo.empty and "lat" in geo else 0,
         "rânduri_cache_rutare_citite": route_cache_rows,
         "elemente_route_matrix_rămase": required,
-        "în_l limita_25000": required <= 25_000,
-        "notă": "Nu s-au efectuat apeluri API; analiza folosește exclusiv cache-urile furnizate.",
+        "în_limita_25000": required <= 25_000,
+        "notă": "Etapa de analiză nu efectuează apeluri API; folosește cache-urile create separat și fără cheie API.",
     }
     return data, audit
 
@@ -147,6 +152,8 @@ def coverage(data: pd.DataFrame) -> pd.DataFrame:
         pct = clients / total
         level = "Acoperire solidă" if pct >= .9 else "Analiză utilizabilă, cu limitări" if pct >= .8 else "Rezultat parțial"
         routed = part[part["rutier_km"].notna()]
+        intervals = part.groupby("interval rutier", observed=True)["Nr. clienți"].sum()
+        zones = part.groupby("Bazin comercial", dropna=False)["Nr. clienți"].sum().nlargest(3)
         rows.append({"Magazin": store, "Clienți totali": total, "Adrese geocodate": addresses,
                      "Clienți geocodați": clients, "Acoperire %": pct,
                      "Clienți negeocodați": total - clients, "Negeocodați %": 1-pct,
@@ -154,7 +161,10 @@ def coverage(data: pd.DataFrame) -> pd.DataFrame:
                      "Mediană / P50 km": weighted_quantile(routed["rutier_km"], routed["Nr. clienți"], .5),
                      "P80 km": weighted_quantile(routed["rutier_km"], routed["Nr. clienți"], .8),
                      "P90 km": weighted_quantile(routed["rutier_km"], routed["Nr. clienți"], .9),
-                     "P95 km": weighted_quantile(routed["rutier_km"], routed["Nr. clienți"], .95), "Nivel încredere": level})
+                     "P95 km": weighted_quantile(routed["rutier_km"], routed["Nr. clienți"], .95),
+                     "Interval dominant": intervals.idxmax() if len(intervals) else UNGEO,
+                     "Principalele zone": ", ".join(f"{k} ({int(v):,})" for k, v in zones.items()),
+                     "Nivel încredere": level})
     return pd.DataFrame(rows)
 
 
@@ -190,10 +200,30 @@ def write_outputs(output: Path, data: pd.DataFrame, audit: dict[str, Any]) -> No
         for sheet in writer.sheets.values(): sheet.freeze_panes(1, 0); sheet.autofilter(0, 0, sheet.dim_rowmax, sheet.dim_colmax)
     (output / "audit_analiza_raze_staer.json").write_text(json.dumps(audit, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
 
-    cards = "".join(f"<section><h2>{s}</h2><p><b>{int(r['Clienți geocodați']):,}</b> / {int(r['Clienți totali']):,} clienți geocodați ({r['Acoperire %']:.1%})</p><p>{r['Nivel încredere']}</p></section>" for s, r in cov[cov.Magazin.ne("Total")].set_index("Magazin").iterrows())
-    table = dist.to_html(index=False, float_format=lambda x: f"{x:.2%}")
-    html = f"""<!doctype html><html lang='ro'><meta charset='utf-8'><meta name='viewport' content='width=device-width'><title>Raze comerciale Staer</title><style>body{{font:16px system-ui;margin:2rem;background:#f4f6f8;color:#17202a}}main{{max-width:1100px;margin:auto}}section{{display:inline-block;vertical-align:top;width:29%;margin:1%;padding:1%;background:white;border-top:5px solid #d8273f}}table{{border-collapse:collapse;background:white;width:100%}}td,th{{padding:.45rem;border:1px solid #ddd;text-align:right}}th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){{text-align:left}}.warn{{padding:1rem;background:#fff3cd;border-left:5px solid #e0a800}}</style><main><h1>Raze comerciale Staer</h1><p class='warn'>Rezultate observate exclusiv în cache. Clienții lipsă nu sunt extrapolați și apar ca „{UNGEO}”. Nu s-au efectuat apeluri API.</p>{cards}<h2>Distribuție — numitor: totalul complet</h2>{table}<h2>Control</h2><pre>{json.dumps(audit, ensure_ascii=False, indent=2)}</pre></main></html>"""
-    (output / "harta_raze_staer.html").write_text(html, encoding="utf-8")
+    colors = {"Staer 7": "#1769aa", "Staer 9": "#e67e22", "Staer 23": "#c62828"}
+    map_obj = folium.Map(location=[44.43, 26.08], zoom_start=10, tiles="CartoDB positron")
+    for store, color in colors.items():
+        part = data[data["Magazin standard"].eq(store) & data["geocodat"]]
+        layer = folium.FeatureGroup(name=f"Clienți {store}", show=True)
+        HeatMap(part[["lat", "lon", "Nr. clienți"]].values.tolist(), radius=12, blur=16, min_opacity=.25,
+                gradient={.25: "#d8ecff", .55: color, 1: "#4a0010"}).add_to(layer)
+        layer.add_to(map_obj)
+        lat, lon = STORE_COORDS[store]
+        summary = cov[cov["Magazin"].eq(store)].iloc[0]
+        folium.Marker([lat, lon], tooltip=store, popup=f"{store}<br>P80 rutier: {summary['P80 km']:.1f} km",
+                      icon=folium.Icon(color="red", icon="home")).add_to(map_obj)
+        folium.Circle([lat, lon], radius=float(summary["P80 km"]) * 1000, color=color, fill=False,
+                      tooltip=f"{store} – cerc orientativ P80 rutier").add_to(map_obj)
+    folium.LayerControl(collapsed=False).add_to(map_obj)
+    title = f"""<div style='position:fixed;top:10px;left:50px;z-index:9999;background:white;padding:10px;border:1px solid #999'>
+    <b>Raze comerciale Staer</b><br>29.204 clienți; acoperire geocodare {cov.iloc[-1]['Acoperire %']:.1%}.<br>
+    Cercurile P80 sunt orientative; punctele lipsă rămân în rapoarte ca „{UNGEO}”.</div>"""
+    map_obj.get_root().html.add_child(folium.Element(title))
+    map_path = output / "harta_raze_staer.html"
+    map_obj.save(map_path)
+    # Folium's template emits whitespace-only suffixes; normalize the tracked
+    # artifact so standard Git whitespace checks remain clean.
+    map_path.write_text("\n".join(line.rstrip() for line in map_path.read_text(encoding="utf-8").splitlines()) + "\n", encoding="utf-8")
 
     with PdfPages(output / "rezumat_raze_staer.pdf") as pdf:
         fig, ax = plt.subplots(figsize=(11.7, 8.3)); ax.axis("off")
@@ -203,7 +233,7 @@ def write_outputs(output: Path, data: pd.DataFrame, audit: dict[str, Any]) -> No
         cols = ["Magazin", "Clienți totali", "Clienți geocodați", "Acoperire %", "Nivel încredere"]
         shown = cov[cols].copy(); shown["Acoperire %"] = shown["Acoperire %"].map(lambda x: f"{x:.1%}")
         ax.table(cellText=shown.values, colLabels=cols, loc="center", cellLoc="center", bbox=[.02,.35,.96,.38])
-        ax.text(.02,.2,f"Elemente Route Matrix rămase: {audit['elemente_route_matrix_rămase']:,}. Apeluri geocodare: 0.")
+        ax.text(.02,.2,f"Elemente Route Matrix rămase: {audit['elemente_route_matrix_rămase']:,}. Geocodări unice în cache: {audit['geocodări_reușite_unice']:,}.")
         pdf.savefig(fig, bbox_inches="tight"); plt.close(fig)
         fig, axes = plt.subplots(1, 3, figsize=(11.7, 8.3))
         for ax, store in zip(axes, EXPECTED_TOTALS):

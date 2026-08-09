@@ -5,3 +5,5 @@ __pycache__/
 output/raza_comerciala_staer.xlsx
 output/rezumat_raze_staer.pdf
 output/livrabile_raze_staer.zip
+
+# Cheia API nu este niciodată salvată; cache-urile rezultate sunt livrabile text.
