@@ -1,48 +1,65 @@
 {
-  "generated_at_utc": "2026-08-09T19:15:41.444545+00:00",
-  "source_workbook": "analiza_bazine_clienti_staer_bucuresti.xlsx",
+  "generated_at_utc": "2026-08-09T19:31:20.207185+00:00",
+  "validated_source_path": "analiza_bazine_clienti_staer_bucuresti.xlsx",
   "source_sheet": "Date analizate",
   "header_excel_row": 3,
-  "identified_columns": {
-    "magazin": "Magazin standard (Alis Ecomob SRL → Staer 9)",
-    "strada": "Stradă standard",
-    "localitate_sau_sector": "Localitate standard",
-    "judet": "Județ",
-    "pondere_clienti": "Nr. clienți"
-  },
+  "existing_files_reviewed": [
+    "analiza_bazine_clienti_staer_bucuresti.xlsx",
+    "scripts/analiza_raze_staer.py",
+    "tests/test_preflight.py",
+    "output/control_preliminar_volume.json"
+  ],
   "source_rows_analyzed": 13382,
-  "api_key_environment_variable_present": true,
-  "totals": {
+  "rows_with_zero_clients_excluded": 220,
+  "rows_with_insufficient_address_excluded": 57,
+  "eligible_rows_before_store_address_aggregation": 13105,
+  "aggregated_store_address_rows": 10482,
+  "client_totals": {
     "Staer 23": 11470,
     "Staer 7": 6617,
     "Staer 9": 11117
   },
-  "expected_totals": {
-    "Staer 7": 6617,
-    "Staer 9": 11117,
-    "Staer 23": 11470
-  },
+  "client_total": 29204,
+  "client_totals_reconciled": true,
   "differences": {
     "Staer 7": 0,
     "Staer 9": 0,
     "Staer 23": 0
   },
-  "general_total": 29204,
-  "expected_general_total": 29204,
-  "totals_reconciled": true,
-  "unique_geographic_addresses": 8005,
-  "unique_store_address_pairs": 10653,
+  "unique_addresses_before_deduplication": 8005,
+  "unique_addresses_after_deduplication": 7889,
+  "cached_geocodes": 0,
+  "cached_route_matrix_elements": 0,
+  "geocoding_requests_required": 7889,
+  "route_matrix_elements_required": 10482,
+  "billable_events_remaining": {
+    "geocoding_requests": 7889,
+    "route_matrix_elements": 10482
+  },
   "limits": {
     "geocoding_requests": 8000,
     "route_matrix_elements": 25000
   },
-  "overages": {
-    "geocoding_requests": 5,
-    "route_matrix_elements": 0
+  "estimated_geocoding_cost": {
+    "currency": "USD",
+    "gross_max": 39.445,
+    "after_monthly_free_threshold_if_unused": 0.0,
+    "monthly_free_threshold": 10000,
+    "account_usage_already_consumed_unknown": true,
+    "rate_per_1000": 5.0
   },
+  "estimated_route_matrix_cost": {
+    "currency": "USD",
+    "gross_max": 52.41,
+    "after_monthly_free_threshold_if_unused": 2.41,
+    "monthly_free_threshold": 10000,
+    "account_usage_already_consumed_unknown": true,
+    "rate_per_1000": 5.0
+  },
+  "pricing_basis": "Google Maps Platform list pricing inspected 2026-08-09; Essentials, first paid tier",
   "google_api_calls_made": 0,
-  "analysis_allowed": false,
-  "status": "STOPPED_BEFORE_GOOGLE_API_CALLS",
-  "stop_reason": "Pragul de geocodare este depășit. Este necesară aprobarea explicită pentru continuare sau o regulă de reducere a universului de adrese.",
-  "source_path_warning": "Calea solicitată input/analiza_bazine_clienti_staer_bucuresti.xlsx nu este un workbook .xlsx valid; a fost inspectat workbookul disponibil analiza_bazine_clienti_staer_bucuresti.xlsx."
+  "analysis_allowed": true,
+  "recommended_option": "analiza completă",
+  "status": "READY_FOR_GOOGLE_ANALYSIS",
+  "source_path_warning": null
 }
