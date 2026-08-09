@@ -4,3 +4,4 @@ __pycache__/
 # Livrabile binare generate local de script; nu sunt incluse în pull request.
 output/raza_comerciala_staer.xlsx
 output/rezumat_raze_staer.pdf
+output/livrabile_raze_staer.zip
