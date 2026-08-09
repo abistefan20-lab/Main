@@ -1,0 +1,64 @@
+{
+  "versiune_manifest": 1,
+  "algoritm_checksum": "SHA-256",
+  "clienți": {
+    "total": 29204,
+    "geocodați": 28992,
+    "negeocodați_sau_nerutați": 212,
+    "rată_acoperire": 0.9927407204492535
+  },
+  "magazine": {
+    "Staer 7": {
+      "clienți": 6617,
+      "clienți_geocodați": 6444,
+      "rată_acoperire": 0.9738552213994257
+    },
+    "Staer 9": {
+      "clienți": 11117,
+      "clienți_geocodați": 11087,
+      "rată_acoperire": 0.9973014302419717
+    },
+    "Staer 23": {
+      "clienți": 11470,
+      "clienți_geocodați": 11461,
+      "rată_acoperire": 0.9992153443766347
+    }
+  },
+  "fișiere_intrare": [
+    {
+      "cale": "data/sursa_analiza_staer.csv",
+      "format": "csv",
+      "rol": "Sursa tabelară normalizată a analizei",
+      "dimensiune_bytes": 1016910,
+      "sha256": "ef1ecf808e6f800cc3af55078765dd60d1619a125ae50140a9e0855c57946f86"
+    },
+    {
+      "cale": "cache/geocoding_cache.jsonl",
+      "format": "jsonl",
+      "rol": "Rezultate de geocodare existente, fără cheia API",
+      "dimensiune_bytes": 2399315,
+      "sha256": "3d28c4c56a4ba359265f457153d6225cbeba4bc971655c501e1c1a518d9af5f7"
+    },
+    {
+      "cale": "cache/routes_cache.jsonl",
+      "format": "jsonl",
+      "rol": "Distanțe rutiere existente",
+      "dimensiune_bytes": 2253483,
+      "sha256": "37765845322e7b99e36dd77f95fdd97c053e2ac982d287f49b1df268eb36e729"
+    },
+    {
+      "cale": "cache/geocoding_run_summary.json",
+      "format": "json",
+      "rol": "Auditul execuției istorice de geocodare",
+      "dimensiune_bytes": 180,
+      "sha256": "2071b0cb28440352f7cc2c1db5d2e1d5e92135e537713e895c2002da7dfa251b"
+    }
+  ],
+  "livrabile_generate": [
+    "output/raza_comerciala_staer.xlsx",
+    "output/harta_raze_staer.html",
+    "output/rezumat_raze_staer.pdf"
+  ],
+  "rețea_în_timpul_analizei": false,
+  "cheie_google_necesară": false
+}

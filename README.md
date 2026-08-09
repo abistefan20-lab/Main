@@ -1,16 +1,48 @@
-LIVRABILE ANALIZA RAZE COMERCIALE STAER
+# Analiza razelor comerciale Staer
 
-1. raza_comerciala_staer.xlsx
-   Deschideți cu Microsoft Excel sau LibreOffice Calc.
+Fluxul automat de regenerare folosește numai cod și date text. Livrabilele
+binare se reconstruiesc fără o cheie Google și fără apeluri Google API.
 
-2. harta_raze_staer.html
-   Deschideți prin dublu-click într-un browser (Chrome, Edge sau Firefox).
+## Citește rezultatele direct în GitHub
 
-3. rezumat_raze_staer.pdf
-   Deschideți cu orice cititor PDF sau direct în browser.
+Deschide [`output/REZUMAT_REZULTATE.md`](output/REZUMAT_REZULTATE.md). Raportul
+include concluziile, indicatorii celor trei magazine și distribuțiile pe
+distanțe și poate fi citit fără descărcare.
 
-4. audit_analiza_raze_staer.json
-   Fișier tehnic de audit; nu este necesar pentru citirea concluziilor.
+## Generează și descarcă livrabilele
 
-NOTĂ IMPORTANTĂ
-În checkout-ul disponibil nu există cache-urile cu cele 10.000 de rezultate de geocodare menționate anterior. Din acest motiv, aceste livrabile marchează clienții ca Negeocodat / nerutat și nu inventează coordonate sau distanțe. Nu a fost efectuat niciun apel API.
+1. Deschide fila **Actions** a repository-ului.
+2. Selectează workflow-ul **„Generează livrabilele Staer”**.
+3. Apasă **Run workflow**, apoi confirmă cu butonul verde **Run workflow**.
+4. După terminarea execuției, deschide execuția finalizată.
+5. În secțiunea **Artifacts**, descarcă **`livrabile-staer`**.
+
+Arhiva artifactului conține:
+
+- `raza_comerciala_staer.xlsx` — raportul Excel;
+- `harta_raze_staer.html` — harta interactivă;
+- `rezumat_raze_staer.pdf` — rezumatul PDF.
+
+Fișierele sunt generate de
+[`scripts/analiza_raze_staer.py`](scripts/analiza_raze_staer.py) exclusiv din:
+
+- `data/sursa_analiza_staer.csv`;
+- `cache/geocoding_cache.jsonl`;
+- `cache/routes_cache.jsonl`;
+- `cache/geocoding_run_summary.json`.
+
+Integritatea acestor intrări este verificată înainte de analiză folosind
+checksumurile SHA-256 din [`manifest_date_staer.json`](manifest_date_staer.json).
+
+## Regenerare locală
+
+Este necesar Python 3.12 sau o versiune compatibilă:
+
+```bash
+python -m pip install -r requirements.txt
+python -m pytest -q
+python scripts/analiza_raze_staer.py
+```
+
+Scriptul nu conține cod de rețea, nu citește chei API și oprește execuția dacă
+un fișier de intrare nu mai corespunde manifestului.
